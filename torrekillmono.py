@@ -10,8 +10,8 @@ pilas = pilasengine.iniciar()
 # Usar un fondo estándar
 pilas.fondos.Pasto()
 # Añadir un marcador
-puntos = pilas.actores.Puntaje(x=230, y=200, color=pilas.colores.blanco)
-puntos.magnitud = 40
+puntos = pilas.actores.Puntaje(x=230, y=200, color=pilas.colores.negro)
+puntos.magnitud = 30
 # Añadir el conmutador de Sonido
 pilas.actores.Sonido()
 
@@ -20,16 +20,36 @@ balas_simples = pilas.actores.Bala
 monos = []
 
 # Funciones
-def mono_destruido():
-    pass
+def mono_destruido(disparo,enemigo):
+    enemigo.eliminar()
+    disparo.eliminar()
+    efecto=random.uniform(1,3)
+    puntos.aumentar()
+    puntos.escala=(3,efecto),.25
+    a=monos.index(enemigo)
+    del monos[a]
+    
 
-
+def game_over(torreta, enemigo):
+    global fin_de_juego
+    enemigo.sonreir()
+    torreta.eliminar()
+    texto1=pilas.actores.Texto("Conseguiste %d puntos"%(puntos.obtener()))
+    texto1.y=-150
+    texto1.definir_color(pilas.colores.rojo)
+    texto2=pilas.actores.Texto("GAME OVER")
+    texto2.definir_color(pilas.colores.rojo)
+    texto2.y=150
+    puntos.eliminar()
+    fin_de_juego=True
 def crear_mono():
     # Crear un enemigo nuevo
     enemigo = pilas.actores.Mono()
+    bonito=random.uniform(0.25,0.75)
+    enemigo.escala=(1,bonito),.25
     # Hacer que se aparición sea con un efecto bonito
     ##la escala varíe entre 0,25 y 0,75 (Ojo con el radio de colisión)
-    enemigo.escala = .5
+    enemigo.radio_de_colision = bonito*50
     # Dotarle de la habilidad de que explote al ser alcanzado por un disparo
     enemigo.aprender(pilas.habilidades.PuedeExplotar)
     # Situarlo en una posición al azar, no demasiado cerca del jugador
@@ -71,6 +91,7 @@ def crear_mono():
 
 torreta = pilas.actores.Torreta(enemigos=monos, cuando_elimina_enemigo=mono_destruido)
 
+pilas.colisiones.agregar(torreta, monos, game_over)
 pilas.tareas.agregar(1, crear_mono)
 #pilas.mundo.agregar_tarea(1, crear_mono) <-- sintaxis vieja
 
