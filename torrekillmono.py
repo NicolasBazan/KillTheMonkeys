@@ -65,36 +65,44 @@ def crear_mono():
         y = -180
     enemigo.x = x
     enemigo.y = y
-    # Dotarlo de un movimiento irregular más impredecible
-    tipo_interpolacion = ['lineal',
-                            'aceleracion_gradual',
-                            'desaceleracion_gradual',
-                            'rebote_inicial',
-                            'rebote_final']
-    
     duracion = 1 +random.random()*4
-    
     pilas.utils.interpolar(enemigo, 'x', 0, duracion)
     pilas.utils.interpolar(enemigo, 'y', 0, duracion)
-    #enemigo.x = pilas.interpolar(0,tiempo,tipo=random.choice(tipo_interpolacion))
-    #enemigo.y = pilas.interpolar(0, tiempo,tipo=random.choice(tipo_interpolacion))
-    # Añadirlo a la lista de enemigos
     monos.append(enemigo)
-    # Permitir la creación de enemigos mientras el juego esté en activo
+    #Inicio de las estrellas
+    if random.randrange(0,20)>15:
+		if (torreta.municion!=pilasengine.actores.Misil):
+			estrella=pilas.actores.Estrella(x, y)
+			estrella.escala=[3,0,0.75],.1
+			pilas.colisiones.agregar(estrella,torreta.habilidades.DispararConClick.proyectiles,asignar_arma_mejorada)
+			pilas.tareas.agregar(3, eliminar_estrella, estrella)
+			# Creacion de enemigos 
     if fin_de_juego:
         return False
     else:
         return True
 
+#Determinamos el arma primaria de la torreta    
+def asignar_arma_simple():
+	# Asignar la munición sencilla
+	torreta.municion=pilasengine.actores.Bala
 
-# Añadir la torreta del jugador
+#Le asgignamos a la torreta el nuevo proyectil    
+def asignar_arma_mejorada(estrella, proyectil):
+    global torreta
+    torreta.municion=pilasengine.actores.Misil
+    estrella.eliminar()
+    pilas.tareas.agregar(10, asignar_arma_simple)
+    pilas.avisar("NUEVA MEJORA ADQUIRIDA")
+        
+def eliminar_estrella(estrella):
+	estrella.eliminar()
 
-torreta = pilas.actores.Torreta(enemigos=monos, cuando_elimina_enemigo=mono_destruido)
-
-pilas.colisiones.agregar(torreta, monos, game_over)
+torreta = pilas.actores.Torreta(enemigos=monos, municion_bala_simple="bala", cuando_elimina_enemigo=mono_destruido)
+torreta.aprender(pilas.habilidades.MoverseConElTeclado)
+torreta.aprender(pilas.habilidades.LimitadoABordesDePantalla)
+torreta.municion=pilasengine.actores.Bala
 pilas.tareas.agregar(1, crear_mono)
-#pilas.mundo.agregar_tarea(1, crear_mono) <-- sintaxis vieja
-
-
+pilas.colisiones.agregar(torreta, monos, game_over)
 # Arrancar el juego
 pilas.ejecutar()
